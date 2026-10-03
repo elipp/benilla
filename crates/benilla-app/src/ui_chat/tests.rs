@@ -2288,8 +2288,8 @@ fn level_up_gains_are_matched_by_level_and_a_miss_is_not_an_absence() {
     );
 }
 
-/// Fires `PLAYER_LEVEL_UP` with the nine reference args and returns every
-/// line the stock handler added to ChatFrame1.
+/// Fires `PLAYER_LEVEL_UP` with the nine reference args and returns every line the stock handler
+/// added to `ChatFrame1`.
 fn ding_lines(s: &mut benilla_ui::script::UiScript, args: [i64; 9]) -> Vec<String> {
     s.run(
         r#"
@@ -2316,6 +2316,9 @@ fn ding_lines(s: &mut benilla_ui::script::UiScript, args: [i64; 9]) -> Vec<Strin
         .collect()
 }
 
+/// Stock `ChatFrame_OnEvent` prints the whole level-up block from `PLAYER_LEVEL_UP`
+/// (`ChatFrame.lua:1283-1323`), once; the app composes none of it. The singular
+/// `LEVEL_UP_CHAR_POINTS` is `GetText`'s plural pick.
 #[test]
 fn the_ding_block_is_printed_once() {
     let _data = benilla_formats::wow_data_or_skip!();
@@ -2332,19 +2335,22 @@ fn the_ding_block_is_printed_once() {
     );
 }
 
+/// A loss reaches stock signed, as the reference's `%d` fire passes it (`0x5e413e`): the health
+/// line prints it, and a lost stat prints no line (`if ( argN > 0 )`, `ChatFrame.lua:1302-1321`).
 #[test]
-fn negative_ding_diff_is_printed_correctly() {
+fn a_negative_gain_prints_signed() {
     let _data = benilla_formats::wow_data_or_skip!();
     let mut s = chat_vm();
-    let lines = ding_lines(&mut s, [10, -22, -15, -1, -1, -1, -1, -1, -1]);
+    let lines = ding_lines(&mut s, [2, -2, 5, 0, -1, 0, 0, 0, 0]);
     assert_eq!(
         lines,
         [
-            "Congratulations, you have reached level 10!",
-            "You have gained -22 hit points.",
+            "Congratulations, you have reached level 2!",
+            "You have gained -2 hit points and 5 mana.",
         ]
     );
 }
+
 /// On `CHARACTER_POINTS_CHANGED` with `arg2 > 0`, stock `ChatFrame_OnEvent` prints
 /// `LEVEL_UP_SKILL_POINTS` (`ChatFrame.lua:1324-1334`).
 #[test]

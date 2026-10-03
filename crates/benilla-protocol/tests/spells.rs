@@ -1003,8 +1003,8 @@ fn combat_log_wire_golden() {
         other => panic!("exploration xp event, got {other:?}"),
     }
 
-    // SMSG_LEVELUP_INFO: level: u32, healthGain: i32, powerGains: [i32; 5] (mana..happiness) and
-    // statGains[i32; 5] (str..spirit), no guid (vmangos `Misc.cpp:524-532`, `Player.cpp:3167-3179`).
+    // SMSG_LEVELUP_INFO: u32 level, then the i32 gains, healthGain, powerGains[5] (mana..happiness)
+    // and statGains[5] (str..spirit), no guid (vmangos `Misc.cpp:524-532`).
     let mut body = Vec::new();
     for v in [7u32, 22, 15, 0, 0, 0, 0, 1, 0, 1, 2, 1] {
         body.extend_from_slice(&v.to_le_bytes());
@@ -1030,7 +1030,7 @@ fn combat_log_wire_golden() {
         other => panic!("level up event, got {other:?}"),
     }
 
-    // SMSG_LEVELUP_INFO, with negative values
+    // A loss the server wraps into its u32 reads negative, as the reference's `%d` fire prints it.
     let mut body = Vec::new();
     for v in [
         7u32, 0xFFFFFFFE, 0xFFFFFFFD, 0, 0, 0, 0, 0xFFFFFFFE, 0, 0xFFFFFFFB, 0xFFFFFFFA, 0xFFFFFFF9,

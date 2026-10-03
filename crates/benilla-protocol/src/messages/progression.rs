@@ -92,7 +92,7 @@ pub fn talent_wipe_confirm(trainer_guid: u64) -> Vec<u8> {
 pub struct LevelUpInfo {
     /// The level just reached.
     pub level: u32,
-    /// Hit points gained.
+    /// Hit points gained, negative on a loss.
     pub health: i32,
     /// Power gains: mana, rage, focus, energy, happiness. The server fills only mana, which is
     /// the reference chat line's mana argument.
@@ -102,9 +102,9 @@ pub struct LevelUpInfo {
     pub stats: [i32; 5],
 }
 
-/// Read `SMSG_LEVELUP_INFO`: `u32` level, `i32` health, 5 powers, 5 stats (`Misc.cpp:524-532`,
-/// `Player.cpp:3167-3179`). Both vmangos and cmangos write all values as `u32`s, while letting
-/// the delta arithmetic underflow freely. Also, they both hard-code zeroes to powers[1..4].
+/// Read `SMSG_LEVELUP_INFO`: `u32` level, `i32` health, 5 powers, 5 stats (`Misc.cpp:524-532`).
+/// The reference fires the gains as `%d` (`0x5e413e`), so a loss the server wraps into its `u32`
+/// (vmangos `Player.cpp:3203-3215`) reads negative.
 pub(super) fn read_level_up_info(r: &mut impl Read) -> io::Result<LevelUpInfo> {
     let level = read_u32_le(r)?;
     let health = read_i32_le(r)?;
