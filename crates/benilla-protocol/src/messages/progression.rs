@@ -103,7 +103,7 @@ pub struct LevelUpInfo {
 }
 
 /// Read `SMSG_LEVELUP_INFO`: `u32` level, `i32` health, 5 powers, 5 stats (`Misc.cpp:524-532`,
-/// `Player.cpp:3167-3179`). vmangos and cmangos and write all values as `u32`s, while letting
+/// `Player.cpp:3167-3179`). Both vmangos and cmangos write all values as `u32`s, while letting
 /// the delta arithmetic underflow freely. Also, they both hard-code zeroes to powers[1..4].
 pub(super) fn read_level_up_info(r: &mut impl Read) -> io::Result<LevelUpInfo> {
     let level = read_u32_le(r)?;
