@@ -19,7 +19,7 @@ use crate::entities::ItemDisplays;
 use crate::items::Items;
 use crate::names::NameCache;
 use crate::net::{
-    ClientCommand, EnteredWorldMessage, NetCommands, ObjectStore, Objects, SelfPlayer,
+    ClientCommand, NetCommands, ObjectStore, Objects, SelfPlayer, WorldVerifiedMessage,
 };
 use crate::query_cache::QueryCache;
 use crate::ui_script::{UiFeed, UiInput};
@@ -183,9 +183,9 @@ impl Plugin for UiMailPlugin {
 
 /// `MSG_QUERY_NEXT_MAIL_TIME` at every world enter, from the mail module's init in the world-enter
 /// cascade (`0x4908c0`). The init stamps "no mail" first, so the icon goes dark across a loading
-/// screen until the reply.
+/// screen until the reply. Sent on [`WorldVerifiedMessage`], as the server drops it before then.
 fn send_query_next_mail_time_on_enter(
-    mut entered: MessageReader<EnteredWorldMessage>,
+    mut entered: MessageReader<WorldVerifiedMessage>,
     commands: Res<NetCommands>,
     mut pending: ResMut<MailPending>,
 ) {

@@ -15,11 +15,11 @@ use bevy::ecs::system::SystemParam;
 
 use super::{
     CharActionResultMessage, CharListMessage, CharacterLoginFailedMessage,
-    CinematicTriggeredMessage, ClientControlMessage, DisconnectedMessage, DroppedOpcodes,
+    CinematicTriggeredMessage, ClientCommand, ClientControlMessage, DisconnectedMessage, DroppedOpcodes,
     EnteredWorldMessage, GameTime, GuidIndex, HomeBind, KnockBackMessage, LoggedOutMessage,
     LoginFailedMessage, LoginQueuedMessage, LoginStageMessage, NetCommands, NetHandlerApp,
     NetStatus, ObjectStore, PendingTransfer, Proficiencies, RealmListMessage, Reputations,
-    SelfGuid, ServerTime, ServerWallClock, TeleportMessage, WorldportMessage,
+    SelfGuid, ServerTime, ServerWallClock, TeleportMessage, WorldVerifiedMessage, WorldportMessage,
 };
 
 /// Registers the session handlers.
@@ -219,6 +219,7 @@ fn on_worldport(
     mut e: Edges,
     mut b: Bridge,
     mut group: ResMut<crate::ui_party::GroupState>,
+    mut verified: MessageWriter<WorldVerifiedMessage>,
 ) {
     if let SessionEvent::Worldport {
         map_id,
@@ -240,6 +241,14 @@ fn on_worldport(
             &b.transports,
             &mut e.worldports,
         );
+        // `needs_ack` false is `SMSG_LOGIN_VERIFY_WORLD`: claim our body, then let the world-entry
+        // requests go.
+        if !needs_ack {
+            if let Some(guid) = b.self_guid.0 {
+                let _ = b.net.0.send(ClientCommand::SetActiveMover { guid });
+            }
+            verified.write(WorldVerifiedMessage);
+        }
     }
 }
 

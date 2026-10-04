@@ -120,6 +120,7 @@ impl Plugin for NetPlugin {
             .add_message::<CharActionResultMessage>()
             .add_message::<CharacterLoginFailedMessage>()
             .add_message::<EnteredWorldMessage>()
+            .add_message::<WorldVerifiedMessage>()
             .add_message::<CinematicTriggeredMessage>()
             .add_message::<ServerSaidMessage>()
             .add_message::<LoggedOutMessage>()
@@ -556,7 +557,7 @@ const RESYNC_AFTER: Duration = Duration::from_secs(3600);
 /// Ask for the server's wall clock on entering the world (login, worldport, instance transfer)
 /// and hourly after, which tracks a server re-clocked under us.
 fn send_query_time(
-    mut entered: MessageReader<EnteredWorldMessage>,
+    mut entered: MessageReader<WorldVerifiedMessage>,
     commands: Res<NetCommands>,
     clock: Res<ServerWallClock>,
     status: Res<NetStatus>,
@@ -2003,6 +2004,12 @@ pub(crate) struct EnteredWorldMessage {
     /// The tutorial flags, if `SMSG_TUTORIAL_FLAGS` came during the login handshake.
     pub(crate) tutorial_flags: Option<Vec<u8>>,
 }
+
+/// `SMSG_LOGIN_VERIFY_WORLD` landed: the server has seated the player, so logged-in opcodes
+/// sent from here on are handled rather than dropped. [`EnteredWorldMessage`] fires a round trip
+/// earlier, at `CMSG_PLAYER_LOGIN`, so the world loads ahead; world-entry requests wait for this.
+#[derive(Message)]
+pub(crate) struct WorldVerifiedMessage;
 
 /// `SMSG_ADDON_INFO`: the addons the server hid from the Lua index space, or `None` if it did
 /// not answer. A resource, since it must exist before the world-entry UI load runs any addon;

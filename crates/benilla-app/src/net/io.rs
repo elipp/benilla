@@ -607,8 +607,9 @@ fn run(
             .find(|c| c.guid == guid)
             .map(|c| c.name.clone())
             .unwrap_or_default();
+        // `CMSG_SET_ACTIVE_MOVER` waits for `SMSG_LOGIN_VERIFY_WORLD` ([`WorldVerifiedMessage`]):
+        // the server drops logged-in opcodes until the load query seats the player.
         session.player_login(refuse_once(guid))?;
-        session.set_active_mover(guid)?;
 
         let billing_time_rested = session.billing_time_rested();
         let tutorial_flags = session.take_tutorial_flags();

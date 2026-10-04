@@ -16,7 +16,7 @@ use benilla_protocol::messages::{BattlefieldList, BattlefieldStatus};
 use benilla_ui::script::{BattlefieldListView, BattlefieldMapInfo, BattlefieldQueueSlot, UiScript};
 
 use crate::names::NameCache;
-use crate::net::{ClientCommand, EnteredWorldMessage, NetCommands};
+use crate::net::{ClientCommand, EnteredWorldMessage, NetCommands, WorldVerifiedMessage};
 use crate::player::Player;
 use crate::ui_dialog_verbs::BattlefieldQueue;
 use crate::ui_party::GroupState;
@@ -307,13 +307,12 @@ fn drain_battlefield(
     }
 }
 
-/// World enter (`0x4a9db0`): the list, the selection and the anchor clear, the queue slots stay,
-/// and the bodyless `CMSG_BATTLEFIELD_STATUS` goes out, answered slot by slot.
+/// World enter (`0x4a9db0`): the list, the selection and the anchor clear, the queue slots stay.
+/// The bodyless `CMSG_BATTLEFIELD_STATUS` follows in [`request_status_on_world_verified`].
 fn reset_on_world_enter(
     mut entered: MessageReader<EnteredWorldMessage>,
     mut state: ResMut<Battlefield>,
     script: Option<NonSendMut<UiScript>>,
-    commands: Res<NetCommands>,
 ) {
     if entered.read().next().is_none() {
         return;
@@ -322,7 +321,17 @@ fn reset_on_world_enter(
     if let Some(mut script) = script {
         script.reset_battlefield_selection();
     }
-    let _ = commands.0.send(ClientCommand::BattlefieldStatusRequest);
+}
+
+/// The world-enter `CMSG_BATTLEFIELD_STATUS`, held for [`WorldVerifiedMessage`]: the server drops
+/// it until the player is seated.
+fn request_status_on_world_verified(
+    mut verified: MessageReader<WorldVerifiedMessage>,
+    commands: Res<NetCommands>,
+) {
+    if verified.read().next().is_some() {
+        let _ = commands.0.send(ClientCommand::BattlefieldStatusRequest);
+    }
 }
 
 /// The battlemaster window's packet handlers.
@@ -363,6 +372,7 @@ impl Plugin for BattlefieldPlugin {
                 reset_on_world_enter
                     .in_set(crate::ui_script::UiFeed)
                     .before(feed_battlefield),
+                request_status_on_world_verified,
                 feed_battlefield
                     .before(crate::ui_battlefield_score::feed_battlefield_score)
                     .before(crate::ui_dialog_verbs::feed_dialog_verbs)
