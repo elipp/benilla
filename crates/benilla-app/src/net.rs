@@ -562,11 +562,13 @@ fn send_query_time(
     clock: Res<ServerWallClock>,
     status: Res<NetStatus>,
     mut asked_at: Local<Option<Instant>>,
+    mut verified: Local<bool>,
 ) {
     let entering = entered.read().next().is_some();
-    // Only while connected; the world-enter send covers a reconnect.
-    let due =
-        status.connected && clock.stale() && asked_at.is_none_or(|t| t.elapsed() >= RESYNC_AFTER);
+    // `connected` rises at `CMSG_PLAYER_LOGIN`, a round trip before the server seats us; the
+    // resync waits for `SMSG_LOGIN_VERIFY_WORLD`, and the world-enter send covers a reconnect.
+    *verified = status.connected && (*verified || entering);
+    let due = *verified && clock.stale() && asked_at.is_none_or(|t| t.elapsed() >= RESYNC_AFTER);
     if entering || due {
         *asked_at = Some(Instant::now());
         let _ = commands.0.send(ClientCommand::QueryTime);
