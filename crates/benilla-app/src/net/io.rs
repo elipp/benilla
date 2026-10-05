@@ -607,8 +607,8 @@ fn run(
             .find(|c| c.guid == guid)
             .map(|c| c.name.clone())
             .unwrap_or_default();
-        // `CMSG_SET_ACTIVE_MOVER` waits for `SMSG_LOGIN_VERIFY_WORLD` ([`WorldVerifiedMessage`]):
-        // the server drops logged-in opcodes until the load query seats the player.
+        // No `CMSG_SET_ACTIVE_MOVER` here: it waits for our own player's create, as the
+        // reference's does (`super::enter_world_on_self_create`); a server may drop it before then.
         session.player_login(refuse_once(guid))?;
 
         let billing_time_rested = session.billing_time_rested();
