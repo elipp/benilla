@@ -184,7 +184,7 @@ impl Plugin for UiMailPlugin {
 
 /// `MSG_QUERY_NEXT_MAIL_TIME` at each world-enter cascade, from the mail init (`0x4acb10`, called
 /// at `0x4909f6`), after the time query and before the battlefield status. The init stamps "no
-/// mail" first (`0x4ade25`).
+/// mail" first (`0x4acb87`).
 pub(crate) fn send_query_next_mail_time_on_enter(
     mut cascades: MessageReader<WorldEnterCascadeMessage>,
     commands: Res<NetCommands>,
